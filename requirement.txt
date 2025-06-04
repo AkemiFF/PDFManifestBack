@@ -7,4 +7,3 @@ python-multipart
 psycopg2-binary
 numpy
 sqlalchemy
-google-generativeai
