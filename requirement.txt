@@ -9,4 +9,3 @@ numpy
 sqlalchemy
 openai==1.66.3
 PyPDF2
-google-generative-ai

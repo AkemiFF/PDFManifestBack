@@ -3,7 +3,6 @@ import os
 import re
 from typing import Dict, List
 
-import google.generativeai as genai
 import pdfplumber
 from app.services.cargoProduitService import (createCargoProduit,
                                               getCargo_ProduitByCargo)
@@ -24,8 +23,8 @@ from app.services.voyageService import (getOrCreateVoyage, getVoyageById,
                                         search_voyage_name)
 from fastapi import HTTPException, UploadFile
 
-genai.configure(api_key="AIzaSyDO3i0OLsGj6v_hvVlnJ-MKU1P0-nEH_3Q")
-model = genai.GenerativeModel('gemini-1.5-flash')
+# genai.configure(api_key="AIzaSyDO3i0OLsGj6v_hvVlnJ-MKU1P0-nEH_3Q")
+# model = genai.GenerativeModel('gemini-1.5-flash')
 
 JSON_TEMPLATE = {
     "vessel": "",               # Code ou nom du navire (ex: "MAERSK HONG KONG")
@@ -138,7 +137,8 @@ def pdf_to_json(file: UploadFile) -> Dict:
 
     # Appel API avec gestion d'erreur
     try:
-        response = model.generate_content(prompt)
+        response = ""
+        # response = model.generate_content(prompt)
         if not response.text:
             raise ValueError("Réponse vide de l'API Gemini")
         
