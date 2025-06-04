@@ -1,0 +1,28 @@
+version: "3.9"
+
+services:
+  web:
+    build: .
+    container_name: fastapi_app
+    ports:
+      - "8000:80"
+    environment:
+      - DATABASE_URL=postgresql://akemi:akemi@db:5432/gestionpdf
+    depends_on:
+      - db
+
+  db:
+    image: postgres:15
+    container_name: postgres_db
+    restart: always
+    environment:
+      POSTGRES_USER: akemi
+      POSTGRES_PASSWORD: akemi
+      POSTGRES_DB: gestionpdf
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+volumes:
+  postgres_data:
