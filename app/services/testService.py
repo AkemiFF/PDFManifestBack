@@ -210,7 +210,7 @@ async def insert_pdf_data(file:UploadFile):
     
     return {"message": "Import réussi", "vessel_id": vessel.id, "voyage_id": voyage.id}
 
-def getDataPDF() -> List[Dict]:
+def getAllDataPDF() -> List[Dict]:
     """
     Récupère uniquement les ManifestEntry sous forme de liste de dicts :
     [
@@ -226,43 +226,27 @@ def getDataPDF() -> List[Dict]:
       …
     ]
     """
-    entries = get_all_manifest_entries()  # renvoie List[ManifestEntry]
+    entries = get_all_manifest_entries() 
     return [entry.to_dict() for entry in entries]
 
-def getAllDataPDF():
-    vessels = getAllVessel()
-    result = []
-    for vessel in vessels :
-        voyages = getVoyageByVessel(vessel.id)
-        list_voyage = []
-        for voyage in voyages :
-            cargos = getCargoByVoyage(voyage_id= voyage.id)
-            produits = []
-            for cargo in cargos:
-                cargo_produit = getCargo_ProduitByCargo(cargo.id)
-                vin = getVinByCargo(cargo= cargo.id)
-                produit = {
-                    "cargo":cargo,
-                    "produit":cargo_produit,
-                    "vin":vin
-                }
 
-                produits.append(produit)
+from typing import Dict, List
 
-            data_voyage = {
-                "voyage_data" : voyage,
-                "cargo" : produits
-            }
-            list_voyage.append(data_voyage)
 
-        data : Dict = {
-            "vessel" : vessel,
-            "voyage" : list_voyage
-        }
+def getDataPDF(entry_id: int) -> List[Dict]:
+    """
+    Récupère toutes les entrées ManifestEntry dont file_pdf_id == entry_id,
+    et retourne une liste de dicts correspondants.
+    """
+    entries = get_all_manifest_entries()
+    result: List[Dict] = []
 
-        result.append(data)
+    for entry in entries:
+        if entry.file_pdf_id == entry_id:
+            result.append(entry.to_dict())
 
     return result
+ # Aucun entry avec cet ID
 
 
 def searchPDFByVessel(search):

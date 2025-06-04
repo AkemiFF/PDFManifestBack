@@ -81,17 +81,6 @@ class VinProduit(Base):
 
     cargo = relationship("Cargo", back_populates= 'cargo_vin')
 
-# Modèle pour la table `file_pdf`
-class FilePDF(Base):
-    __tablename__ = 'file_pdf'
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    nom = Column(String(255), nullable=False)
-    pdf = Column(LargeBinary,nullable = False)
-    date_ajout = Column(Date,nullable= False)
-    page = Column(Integer,nullable= False)
-        
-    contenus = relationship("Contenu", back_populates="pdf")
-    pdf_voyages = relationship("PDF_Voyages",back_populates= "pdf")
 
 
 
@@ -116,10 +105,29 @@ class PDF_Voyages(Base):
     voyages = relationship("Voyage",back_populates= "voyage_pdf")
 
 
+class FilePDF(Base):
+    __tablename__ = 'file_pdf'
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    nom = Column(String(255), nullable=False)
+    pdf = Column(LargeBinary, nullable=False)
+    date_ajout = Column(Date, nullable=False)
+    page = Column(Integer, nullable=False)
+
+    contenus = relationship("Contenu", back_populates="pdf")
+    pdf_voyages = relationship("PDF_Voyages", back_populates="pdf")
+
+    # Nouvelle relation vers ManifestEntry
+    manifest_entries = relationship(
+        "ManifestEntry",
+        back_populates="pdf",
+        cascade="all, delete-orphan"
+    )
+
+
 class ManifestEntry(Base):
     __tablename__ = 'manifest_entry'
 
-    id = Column(Integer, primary_key=True, autoincrement=False) 
+    id = Column(Integer, primary_key=True, autoincrement=False)
     name = Column(String(255), nullable=False)
     flag = Column(String(10), nullable=True)
     produits = Column(Text, nullable=True)
@@ -127,6 +135,16 @@ class ManifestEntry(Base):
     poids = Column(Float, nullable=False)
     date = Column(Date, nullable=True)
 
+    # Clé étrangère vers FilePDF (peut être null)
+    file_pdf_id = Column(Integer, ForeignKey('file_pdf.id'), nullable=True)
+    # Nouveau champ "page" pour connaître la page du PDF associée
+    page = Column(Integer, nullable=True)
+
+    # Relation vers FilePDF
+    pdf = relationship(
+        "FilePDF",
+        back_populates="manifest_entries"
+    )
 
     def to_dict(self) -> dict:
         return {
@@ -136,5 +154,7 @@ class ManifestEntry(Base):
             "produits": self.produits,
             "volume": self.volume,
             "poids": self.poids,
-            "date": self.date.isoformat() if self.date else None
+            "date": self.date.isoformat() if self.date else None,
+            "file_pdf_id": self.file_pdf_id,
+            "page": self.page
         }

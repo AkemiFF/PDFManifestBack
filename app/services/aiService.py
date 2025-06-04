@@ -5,11 +5,10 @@ import tempfile
 from typing import Generator, List, Optional, Union
 
 import openai
-from openai import APIError, AuthenticationError, OpenAI, RateLimitError
-from PyPDF2 import PdfReader
-
 from app.models.model import FilePDF
 from app.services.pdfToAiService import *
+from openai import APIError, AuthenticationError, OpenAI, RateLimitError
+from PyPDF2 import PdfReader
 
 
 def _format_table(table: List[List[str]]) -> str:
@@ -118,7 +117,7 @@ class AIManager:
         prompt = (
             "Lis le contenu suivant (texte et tableaux) et retourne en JSON un ou plusieurs objets "
             "avec les champs : Name (texte, vessel (nom du navire)), Flag (code pays), "
-            "Volume (nombre, m3), Poids (nombre, kg), DATE (date). "
+            "Volume (nombre, m3), Poids (nombre, kg), DATE (date), Page (nombre, le numéro de page en haut ou en bas). "
             "Si plusieurs éléments sont détectés, renvoie une liste JSON. "
             "Contenu :" + text
         )

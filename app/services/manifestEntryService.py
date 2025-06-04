@@ -18,9 +18,12 @@ def get_all_manifest_entries() -> List[ManifestEntry]:
         return entries
     finally:
         db.close()
+from app.models.model import FilePDF, ManifestEntry
+
 
 def save_manifest_entries(
-    data: Union[List[dict], List[List[dict]]]
+    data: Union[List[dict], List[List[dict]]],
+    record: FilePDF
 ) -> List[ManifestEntry]:
     """
     Insère en base les objets JSON extraits par l'IA.
@@ -39,9 +42,10 @@ def save_manifest_entries(
         else:
             raise ValueError(f"Type inattendu dans data: {type(batch)}")
 
-    # Récupérer le dernier ID existant (ou 0 si aucun)
+    db.add(record)
+    db.flush() 
     last_id = db.query(func.max(ManifestEntry.id)).scalar() or 0
-
+    print(record)
     entries: List[ManifestEntry] = []
     for i, item in enumerate(flat):
         # Conversion du champ "DATE" en date Python, s'il existe
@@ -63,7 +67,9 @@ def save_manifest_entries(
             produits = item.get("Produits"),
             volume   = item.get("Volume"),
             poids    = item.get("Poids"),
-            date     = date_val
+            date     = date_val,
+            file_pdf_id = record.id,       # lier au FilePDF inséré
+            page        = 1
         )
 
         # merge() permet d'INSERT ou UPDATE selon que l'ID existe ou non

@@ -9,7 +9,7 @@ DATABASE_URL = "postgresql://akemi:akemi@localhost:5432/gestionpdf"
 
 engine = create_engine(DATABASE_URL)
 
-# Crée toutes les tables déclarées dans Base.metadata (manifest_entry, file_pdf, etc.)
+Base.metadata.drop_all(bind=engine) 
 Base.metadata.create_all(bind=engine)
 
 print("✅ Tables créées (si elles n'existaient pas déjà).")
