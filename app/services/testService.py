@@ -1,20 +1,28 @@
+import json
+import os
+import re
+from typing import Dict, List
+
 import google.generativeai as genai
 import pdfplumber
-from fastapi import UploadFile, HTTPException
-from typing import Dict, List
-import json
-import re
-import os
-
-from app.services.vesselService import createOrGetVessel,getVesselId,searchVesselByName,getAllVessel
-from app.services.voyageService import getOrCreateVoyage,getVoyageById,getVoyageByVessel,search_voyage_name,search_voyage_entre_date
-from app.services.cargoService import createCargo,getCargoByVoyage
-from app.services.cargoProduitService import createCargoProduit,getCargo_ProduitByCargo
-from app.services.VinProduitService import createVinProduit,getVinByCargo
-from app.services.filePDFService import createNewFilePDF,getById
-from app.services.pdfService import extract_text_with_plumber,get_number_page
+from app.services.cargoProduitService import (createCargoProduit,
+                                              getCargo_ProduitByCargo)
+from app.services.cargoService import createCargo, getCargoByVoyage
 from app.services.contenuService import createNewContenu
-from app.services.pdfVoyageService import getPDFVoyagesByPDF_Id,getPDFVoyageByVoyage,createNewPDFVoyages
+from app.services.filePDFService import createNewFilePDF, getById
+from app.services.manifestEntryService import get_all_manifest_entries
+from app.services.pdfService import extract_text_with_plumber, get_number_page
+from app.services.pdfVoyageService import (createNewPDFVoyages,
+                                           getPDFVoyageByVoyage,
+                                           getPDFVoyagesByPDF_Id)
+from app.services.vesselService import (createOrGetVessel, getAllVessel,
+                                        getVesselId, searchVesselByName)
+from app.services.VinProduitService import createVinProduit, getVinByCargo
+from app.services.voyageService import (getOrCreateVoyage, getVoyageById,
+                                        getVoyageByVessel,
+                                        search_voyage_entre_date,
+                                        search_voyage_name)
+from fastapi import HTTPException, UploadFile
 
 genai.configure(api_key="AIzaSyDO3i0OLsGj6v_hvVlnJ-MKU1P0-nEH_3Q")
 model = genai.GenerativeModel('gemini-1.5-flash')
@@ -62,9 +70,10 @@ def extract_text(file: UploadFile) -> str:
     except Exception as e:
         raise ValueError(f"Erreur lors de l'extraction du PDF: {str(e)}")
 
-import re
 import json
+import re
 from json.decoder import JSONDecodeError
+
 
 def clean_json_response(text: str) -> dict:
     try:
@@ -201,33 +210,24 @@ async def insert_pdf_data(file:UploadFile):
     
     return {"message": "Import réussi", "vessel_id": vessel.id, "voyage_id": voyage.id}
 
-def getDataPDF(pdf_id):
-    pdf_voyages = getPDFVoyagesByPDF_Id(pdf_id= pdf_id)
-    voyage = getVoyageById(pdf_voyages.voyage_id)
-    vessel = getVesselId(voyage.vessel_id)
-    cargos = getCargoByVoyage(voyage_id= voyage.id)
-
-    produits = []
-
-    for cargo in cargos:
-        cargo_produit = getCargo_ProduitByCargo(cargo.id)
-        vin = getVinByCargo(cargo= cargo.id)
-        produit = {
-            "cargo":cargo,
-            "produit":cargo_produit,
-            "vin":vin
-        }
-
-        produits.append(produit)
-
-
-    data : Dict = {
-        "vessel" : vessel,
-        "voyage" : voyage,
-        "cargo" : produits,
-    }
-
-    return data
+def getDataPDF() -> List[Dict]:
+    """
+    Récupère uniquement les ManifestEntry sous forme de liste de dicts :
+    [
+      {
+        "id": …,
+        "name": …,
+        "flag": …,
+        "produits": …,
+        "volume": …,
+        "poids": …,
+        "date": "YYYY-MM-DD"
+      },
+      …
+    ]
+    """
+    entries = get_all_manifest_entries()  # renvoie List[ManifestEntry]
+    return [entry.to_dict() for entry in entries]
 
 def getAllDataPDF():
     vessels = getAllVessel()

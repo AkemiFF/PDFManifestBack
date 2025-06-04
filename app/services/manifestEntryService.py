@@ -1,21 +1,36 @@
-from typing import List, Union
 from datetime import datetime
-from sqlalchemy.orm import Session
-from app.config.database import getSessionLocal
+from typing import List, Union
 
+from app.config.database import getSessionLocal
 from app.models.model import ManifestEntry
+from sqlalchemy import func
+from sqlalchemy.orm import Session
+
+
+def get_all_manifest_entries() -> List[ManifestEntry]:
+    """
+    Récupère toutes les entrées de la table manifest_entry.
+    Retourne une liste d'instances ManifestEntry.
+    """
+    db = getSessionLocal()
+    try:
+        entries: List[ManifestEntry] = db.query(ManifestEntry).all()
+        return entries
+    finally:
+        db.close()
 
 def save_manifest_entries(
     data: Union[List[dict], List[List[dict]]]
 ) -> List[ManifestEntry]:
     """
     Insère en base les objets JSON extraits par l'IA.
-    - db: session SQLAlchemy.
     - data: soit une liste de dicts, soit une liste de listes de dicts.
     Retourne la liste des ManifestEntry insérés ou mis à jour.
     """
-    db = getSessionLocal()
+    db: Session = getSessionLocal()
     flat: List[dict] = []
+    
+    # Aplatir la structure (liste de dicts ou liste de listes)
     for batch in data:
         if isinstance(batch, list):
             flat.extend(batch)
@@ -24,30 +39,45 @@ def save_manifest_entries(
         else:
             raise ValueError(f"Type inattendu dans data: {type(batch)}")
 
+    # Récupérer le dernier ID existant (ou 0 si aucun)
+    last_id = db.query(func.max(ManifestEntry.id)).scalar() or 0
+
     entries: List[ManifestEntry] = []
-    for item in flat:
-        # Conversion du champ DATE en date Python
+    for i, item in enumerate(flat):
+        # Conversion du champ "DATE" en date Python, s'il existe
         date_val = None
         if item.get("DATE"):
             try:
                 date_val = datetime.strptime(item["DATE"], "%Y-%m-%d").date()
             except ValueError:
-                # tu peux choisir de logger / lever selon le cas
                 date_val = None
 
-        # Création ou mise à jour de l'entrée
+        # Générer un nouvel ID si non fourni dans le JSON
+        entry_id = item.get("ID") if "ID" in item else last_id + i + 1
+
+        # Créer l'instance en se basant sur les attributs du modèle (en minuscules)
         entry = ManifestEntry(
-            # id             = item["ID"],
-            Name           = item["Name"],
-            Flag           = item.get("Flag"),
-            Produits       = item.get("Produits"),
-            Volume         = item.get("Volume"),
-            Poids          = item["Poids"],
-            Date           = date_val
+            id       = entry_id,
+            name     = item.get("Name"),
+            flag     = item.get("Flag"),
+            produits = item.get("Produits"),
+            volume   = item.get("Volume"),
+            poids    = item.get("Poids"),
+            date     = date_val
         )
-        # .merge() permet insert ou update si PK déjà existant
+
+        # merge() permet d'INSERT ou UPDATE selon que l'ID existe ou non
         merged = db.merge(entry)
+        # pour récupérer les champs calculés/auto‐générés si besoin
+        db.flush()
         entries.append(merged)
 
+    # On commite après avoir ajouté / mis à jour tous les objets
     db.commit()
+
+    # Après un commit, SQLAlchemy expire par défaut les instances.
+    # On les "refresh" pour s'assurer qu'elles sont à jour en session
+    for ent in entries:
+        db.refresh(ent)
+
     return entries

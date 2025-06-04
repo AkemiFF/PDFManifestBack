@@ -30,7 +30,7 @@ def getConnection() :
 
 def getSessionLocal():
     #DATABASE_URL = "postgresql+psycopg2://postgres.eevnxzwewffagbvdlkgk:WzSu7z8T4KFYpqeL@aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres"
-    DATABASE_URL = "postgresql+psycopg2://postgres:pass@localhost:5432/manifest"
+    DATABASE_URL = "postgresql://akemi:akemi@localhost:5432/gestionpdf"
     engine = create_engine(DATABASE_URL)
 
 

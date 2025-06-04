@@ -52,7 +52,7 @@ class Cargo(Base) :
     shipper = Column(String(255),nullable=False)
     consignee = Column(String(255),nullable=True)
     bl_no = Column(String(50), nullable=False)
-    pays_origine_id = Column(Integer,ForeignKey('pays_origine.id',ondelete='NULL'))
+    pays_origine_id = Column(Integer,ForeignKey('pays_origine.id',ondelete='SET NULL'))
     quantite = Column(Integer)
     poid =  Column(Numeric(10, 2))
     volume = Column(Numeric(10,2))
@@ -120,20 +120,21 @@ class ManifestEntry(Base):
     __tablename__ = 'manifest_entry'
 
     id = Column(Integer, primary_key=True, autoincrement=False) 
-    Name = Column(String(255), nullable=False)
-    Flag = Column(String(10), nullable=True)
-    Produits = Column(Text, nullable=True)
-    Volume = Column(Float, nullable=True)
-    Poids = Column(Float, nullable=False)
-    Date = Column(Date, nullable=True)
+    name = Column(String(255), nullable=False)
+    flag = Column(String(10), nullable=True)
+    produits = Column(Text, nullable=True)
+    volume = Column(Float, nullable=True)
+    poids = Column(Float, nullable=False)
+    date = Column(Date, nullable=True)
+
 
     def to_dict(self) -> dict:
         return {
-            "ID": self.id,
-            "Name": self.Name,
-            "Flag": self.Flag,
-            "Produits": self.Produits,
-            "Volume": self.Volume,
-            "Poids": self.Poids,
-            "DATE": self.Date.isoformat() if self.Date else None
+            "id": self.id,
+            "name": self.name,
+            "flag": self.flag,
+            "produits": self.produits,
+            "volume": self.volume,
+            "poids": self.poids,
+            "date": self.date.isoformat() if self.date else None
         }

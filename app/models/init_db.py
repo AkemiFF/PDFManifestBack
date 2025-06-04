@@ -1,6 +1,7 @@
 # init_db.py
+from model import \
+    Base  # importe ici ton declarative_base() avec ManifestEntry et FilePDF
 from sqlalchemy import create_engine
-from model import Base  # importe ici ton declarative_base() avec ManifestEntry et FilePDF
 
 # Exemple de connexion PostgreSQL :
 # Remplace user, password, host, port, dbname par tes infos

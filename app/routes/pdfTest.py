@@ -1,13 +1,13 @@
 from datetime import date
 
-from fastapi import APIRouter, File, HTTPException, UploadFile
-from fastapi.responses import StreamingResponse
-
 from app.services.aiService import *
 from app.services.filePDFService import getAllPdf, getPDF
-from app.services.manifestEntryService import save_manifest_entries
+from app.services.manifestEntryService import (get_all_manifest_entries,
+                                               save_manifest_entries)
 from app.services.pdfService import extract_text_with_plumber
 from app.services.pdfToAiService import *
+from fastapi import APIRouter, File, HTTPException, UploadFile
+from fastapi.responses import StreamingResponse
 
 router = APIRouter()
 
@@ -17,6 +17,12 @@ from datetime import date
 from fastapi import APIRouter, File, UploadFile
 
 router = APIRouter()
+
+@router.post("/list")
+async def list_manifest():
+    entries = get_all_manifest_entries() 
+    return [entry.to_dict() for entry in entries]
+
 
 @router.post("/extract")
 async def extract_text_from_uploaded_pdf(file: UploadFile = File(...)):
