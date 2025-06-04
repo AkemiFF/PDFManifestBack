@@ -7,3 +7,5 @@ python-multipart
 psycopg2-binary
 numpy
 sqlalchemy
+openai==1.66.3
+PyPDF2
